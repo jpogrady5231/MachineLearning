@@ -5,10 +5,6 @@ summary(loan_data)
 nrow(unique(loan_data)) # Check unique rows in dataset
 
 
-
-loan_data$loan_status <- gsub("Approved", 1, loan_data$loan_status)
-loan_data$loan_status <- gsub("Rejected", 0, loan_data$loan_status)
-
 summary(as.factor(loan_data$loan_status))
 
 
