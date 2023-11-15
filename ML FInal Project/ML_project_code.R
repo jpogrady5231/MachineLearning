@@ -26,7 +26,7 @@ plot_dat <- loan_data
 plot_dat$loan_status <-  as.factor(loan_data$loan_status)
 ```
 
-```{r}
+
     g_1 <-ggplot(loan_data, aes(x = income_annum)) + # Set X-axis as insurance charges
   geom_density(fill = "blue", alpha = 0.5) + # Use geom_density to get density plot
   theme_bw() + # Set theme for plot
