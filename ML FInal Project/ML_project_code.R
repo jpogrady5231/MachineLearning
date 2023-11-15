@@ -1,9 +1,8 @@
-loan_data <- read.csv("Downloads/loan_approval_dataset 3.csv") # Load loan dataset
+loan_data <- read.csv("~/Desktop/ML FInal Project/loan_approval_dataset 2.csv") # Load loan dataset
 
 summary(loan_data)
 
 nrow(unique(loan_data)) # Check unique rows in dataset
-
 
 summary(as.factor(loan_data$loan_status))
 
@@ -57,11 +56,21 @@ g_2 <- ggplot(plot_dat, aes(x = education, fill = loan_status)) +
   theme(panel.grid.major = element_blank(), 
         panel.grid.minor = element_blank(), 
         panel.border = element_blank(), 
-        panel.background = element_blank()) + 
-  labs(x = "Graduate Status", title = "Education Level?",
-       fill = "loan_status") + 
-  scale_fill_manual(values = c("1" = "red", "0" = "blue"), 
+        panel.background = element_blank()) + labs(x = "Graduate Status", title = "Education Level?",
+       fill = "loan_status") 
+### + scale_fill_manual(values = c("1" = "red", "0" = "blue"), 
                     labels = c("1" = "approved", "0" = "rejected")) 
 
 
 g_2
+
+
+#### First Regession Model Attempts
+lm_full <- lm(loan_status ~ ., data = loan_data)
+
+summary(lm_full)
+
+fit_1 <- glm(loan_status ~., # Set formula
+             family=binomial(link='logit'), # Set logistic regression
+             data= loan_data) # Set dataset
+summary(fit_1) # Sumamrize model
