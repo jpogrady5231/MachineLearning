@@ -85,7 +85,9 @@ g_2
 ```
 
 ```{r}
-
+loan_data$loan_status <- gsub("Approved", 1, loan_data$loan_status)
+loan_data$loan_status <- gsub("Rejected", 0, loan_data$loan_status)
+as.factor(loan_data$loan_status)
 
 
 lm_full <- lm(loan_status ~ ., data = loan_data)
