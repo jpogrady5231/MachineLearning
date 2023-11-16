@@ -1,6 +1,6 @@
 ---
 title: "ML Project"
-author: "BenjaminGarcia"
+author: "BenjaminGarcia, Jack O'Grady, Chance Van Dyke, Brett Lobsinger"
 date: "2023-11-14"
 output: html_document
 ---
@@ -85,6 +85,9 @@ g_2
 ```
 
 ```{r}
+
+
+
 lm_full <- lm(loan_status ~ ., data = loan_data)
 
 summary(lm_full)
