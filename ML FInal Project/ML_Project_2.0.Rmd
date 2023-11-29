@@ -22,6 +22,7 @@ total_data <- read.csv("~/Desktop/GraduateSchool/S2/Machine/loan_approval_datase
 
 #Jack loan_data <- 
 
+summary(as.factor(total_data$loan_status))
 summary(total_data)
 
 ```
@@ -63,6 +64,7 @@ library(devtools)
 Separating Data:
 
 ```{r}
+
 set.seed(42042069)
 
 total_obs <- dim(total_data)[1]
@@ -76,12 +78,26 @@ train_obs <- dim(train_data)[1]
 
 summary(total_data)
 
+
 ```
 
-Data Manipulation:
+Data Viz (Ben):
 
 ```{r}
+plot_dat <- total_data 
+plot_dat$loan_status <-  as.factor(total_data$loan_status)
+head(plot_dat)
 
+g_1 <- ggplot(plot_dat, aes(x = income_annum, fill = loan_status)) + 
+  geom_density(alpha = 0.55) + 
+    theme_set(theme_bw(base_size = 10) ) + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), 
+        panel.background = element_blank()) + 
+  labs(x = "AnnualIncome", title = "AnnualIncome - LoanApproval",
+       fill = "loan_status")
+g_1 
 
 
 ```
