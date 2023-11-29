@@ -1,0 +1,91 @@
+---
+title: "ML_Project_2.0"
+author: "Chance Van Dyke"
+date: "2023-11-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+#Ben loan_data <- read.csv("~/Desktop/ML FInal Project/loan_approval_dataset 2.csv") # Load loan dataset
+
+#Chance 
+total_data <- read.csv("~/Desktop/GraduateSchool/S2/Machine/loan_approval_dataset 2.csv") # Load loan dataset
+
+#Jack loan_data <- 
+
+summary(total_data)
+
+```
+
+packages:
+
+```{r pressure, echo=FALSE}
+#install.packages("ggplot2")
+#install.packages("rpart")				        # Popular decision tree algorithm
+#install.packages("rattle")					# Fancy tree plot
+#install.packages("rpart.plot")				# Enhanced tree plots
+#install.packages("RColorBrewer")				# Color selection for fancy tree plot
+#install.packages("party")					# Alternative decision tree algorithm
+#install.packages("partykit")				# Convert rpart object to BinaryTree
+#install.packages("caret2")		
+#install.packages("splitstackshape")
+
+library(ggplot2)
+library(rpart)				        # Popular decision tree algorithm
+library(rattle)					# Fancy tree plot
+library(rpart.plot)				# Enhanced tree plots
+library(RColorBrewer)				# Color selection for fancy tree plot
+library(party)					# Alternative decision tree algorithm
+library(partykit)				# Convert rpart object to BinaryTree
+library(caret)	
+library(reshape2) # Load reshape 2 for melting
+library(DMwR) # Load data mining with R for SMOTE
+library(splitstackshape)
+library(randomForest)
+library(caret)
+library(xgboost)
+library(OptimalCutpoints) # Load optimal cutpoints
+library(xgboostExplainer) # Load XGboost Explainer
+library(pROC) # Load proc
+library(SHAPforxgboost) # Load shap for XGBoost
+library(devtools) 
+```
+
+Separating Data:
+
+```{r}
+set.seed(42042069)
+
+total_obs <- dim(total_data)[1]
+
+## Data Partition: Training v.s. Test split
+train_data_indices <- sample(1:total_obs, 0.8*total_obs)
+train_data <- total_data[train_data_indices,]
+test_data <- total_data[-train_data_indices,]
+# Record the size of training data and test data
+train_obs <- dim(train_data)[1]
+
+summary(total_data)
+
+```
+
+Data Manipulation:
+
+```{r}
+
+
+
+```
+
+
+
