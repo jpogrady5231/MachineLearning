@@ -92,8 +92,8 @@ We are now ready to fit a classification tree in order to predict if an individu
 tree_1 <- rpart(loan_status ~., # Set tree formula
 data = total_data) # Set dataset
 par(xpd = NA) # Set this avoid cut-off text
-plot(tree_1)  # Plot tree
-text(tree_1, digits = 3) # Add text
+#plot(tree_1)  # Plot tree
+#text(tree_1, digits = 3) # Add text
 ```
 
 The default plot for decision trees in R is terrible. To remedy this we can use `fancyRpartPlot()`.
@@ -101,8 +101,6 @@ The default plot for decision trees in R is terrible. To remedy this we can use 
 ```{r Plot tree 1}
 fancyRpartPlot(tree_1) # Plot fancy tree
 ```
-
-Here we can see that the top splitting variable is family history as we might expect from the heat map we created. The double negative at the first split can be confusing but what it is showing is that samples who did not have "family_history = No" are more likely to seek help and end up in the terminal node on the right while samples who did have a family history are split to the left. 
 
 We can also the view the tree structure by calling the fitted tree:
 ```{r Call tree}
@@ -132,12 +130,11 @@ A better way to interpret the complexity parameter is to plots its progression a
 plotcp(tree_1) # Plot cp
 ```
 
-Ultimately the complexity parameter is used to control the size of the tree. Smaller values will build larger trees (with cp =0 building a maximal tree) and larger values dictating that a larger reduction in error must be achieved before growing the tree. We want to find a model which minimizes the cross-validation relative error. To do this we must adjust some parameters in our rpart model. From the graph we can see that the lowest relative error occurs when cp = 0.022. To set this parameter in our model we can use `control = rpart.control()` inside the rpart function:
 
 ```{r tree set cp}
 tree_2 <- rpart(loan_status ~., # Set tree formula
 data = total_data, # Set data
-control = rpart.control(cp = 0.022)) # Set parameters
+control = rpart.control(cp = 0.11)) # Set parameters
 fancyRpartPlot(tree_2) # Plot fancy tree
 ```
 
@@ -160,7 +157,6 @@ We can also set some other parameters inside `rpart.control()`:
 ### Bootstrap resampling
 
 To carry out bootstrap re-sampling we simply generate a random selection of indices from the minority class to use in the model, in effect this randomly duplicates some of the minority class samples:
-
 
 
 ```{r bootstrap resample}
@@ -271,7 +267,7 @@ Lets use a cut-off of 0.6 and see what the results would look like in a confusio
 ```{r confusion matrix}
 preds_char <- rep("Rejected", nrow(plot_dat)) # Create vector for predictions with deafult value
 preds_char[which(plot_dat$probability >= 0.6)] <- "Approved" # Select sought help predictions
-confusionMatrix(table(preds_char, as.factor(plot_dat$response))) # Create confusion matrix
+# confusionMatrix(table(preds_char, as.factor(plot_dat$response))) # Create confusion matrix
 ```
 
 Lets see if using smote on the training data can help improve our accuracy;
@@ -291,7 +287,7 @@ plot_dat <- cbind.data.frame(preds[,2], test_dat$loan_status)
 names(plot_dat) <- c("probability", "response")
 preds_char <- rep("Rejected", nrow(plot_dat)) # Create vector for predictions with deafult value
 preds_char[which(plot_dat$probability >= 0.6)] <- "Approved" # Select sought help predictions
-confusionMatrix(table(preds_char, as.factor(plot_dat$response))) # Create confusion matrix
+# confusionMatrix(table(preds_char, as.factor(plot_dat$response))) # Create confusion matrix
 ```
 
 Not much of an increase, lets try combining smote and modifying the parameter values. First we can build a maximal tree and look at the cp:
