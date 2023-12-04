@@ -1,0 +1,337 @@
+---
+title: "ML_project_3"
+theme: "sandstone"
+editor: visual
+authors: "Chance Van Dyke, Ben Garcia, Jack O'Grady & Brett Lobsinger"
+date: "2023-12-04"
+format: html
+---
+
+## Prework
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+#install.packages("ggplot2")
+#install.packages("rpart")				        # Popular decision tree algorithm
+#install.packages("rattle")					# Fancy tree plot
+#install.packages("rpart.plot")				# Enhanced tree plots
+#install.packages("RColorBrewer")				# Color selection for fancy tree plot
+#install.packages("party")					# Alternative decision tree algorithm
+#install.packages("partykit")				# Convert rpart object to BinaryTree
+#install.packages("caret2")		
+#install.packages("splitstackshape")
+
+library(ggplot2)
+library(rpart)				        # Popular decision tree algorithm
+library(rattle)					# Fancy tree plot
+library(rpart.plot)				# Enhanced tree plots
+library(RColorBrewer)				# Color selection for fancy tree plot
+library(party)					# Alternative decision tree algorithm
+library(partykit)				# Convert rpart object to BinaryTree
+library(caret)	
+library(reshape2) # Load reshape 2 for melting
+library(DMwR) # Load data mining with R for SMOTE
+library(splitstackshape)
+library(randomForest)
+library(caret)
+library(xgboost)
+library(OptimalCutpoints) # Load optimal cutpoints
+library(xgboostExplainer) # Load XGboost Explainer
+library(pROC) # Load proc
+library(SHAPforxgboost) # Load shap for XGBoost
+library(devtools)
+```
+
+### Reading and Separating Data:
+
+```{r cars}
+#Ben total_data <- read.csv("~/Desktop/ML FInal Project/loan_approval_dataset 2.csv") # Load loan dataset
+
+#Chance 
+total_data <- read.csv("~/Desktop/Machine Learning/loan_approval_dataset 2.csv") # Load loan dataset
+
+#Jack total_data <- 
+
+summary(as.factor(total_data$loan_status))
+
+summary(total_data)
+```
+
+```{r}
+set.seed(42042069)
+
+total_obs <- dim(total_data)[1]
+
+## Data Partition: Training v.s. Test split
+train_data_indices <- sample(1:total_obs, 0.8*total_obs)
+train_data <- total_data[train_data_indices,]
+test_data <- total_data[-train_data_indices,]
+# Record the size of training data and test data
+train_obs <- dim(train_data)[1]
+
+summary(total_data)
+
+summary(as.factor(train_data$loan_status))
+```
+
+### Decision Tree:
+
+We are now ready to fit a classification tree in order to predict if an individual will seek or not seek help for a mental health issue. To build a decision tree, we will use the \`rpart()\` function. We will build our first tree using all the variables, using \`\~.\` as we did for logistic and linear regression.
+
+```{r Decision tree 1}
+tree_1 <- rpart(loan_status ~., # Set tree formula
+data = total_data) # Set dataset
+par(xpd = NA) # Set this avoid cut-off text
+#plot(tree_1)  # Plot tree
+#text(tree_1, digits = 3) # Add text
+```
+
+The default plot for decision trees in R is terrible. To remedy this we can use \`fancyRpartPlot()\`.
+
+
+```{r Plot tree 1}
+fancyRpartPlot(tree_1) # Plot fancy tree
+```
+
+We can also the view the tree structure by calling the fitted tree:
+
+```{r Call tree}
+# tree_1
+```
+
+If we run the \`summary()\` command on the tree this prints out a wealth of information regarding the tree. 
+
+```{r Summary tree 1}
+summary(tree_1)
+```
+
+The initial table has some valuable information:
+
+\### Selecting CP
+
+
+In fitting a basic tree we are most interested in the complexity parameter. To view the complexity parameter table from the summary statistics by itself we can run \`printcp()\`:
+
+```{r Print CP}
+printcp(tree_1) # Print complexity parameter table
+```
+
+A better way to interpret the complexity parameter is to plots its progression and compare different values with the relative error they lead to:
+
+
+
+```{r plot cp}
+plotcp(tree_1) # Plot cp
+```
+
+```{r tree set cp}
+tree_2 <- rpart(loan_status ~., # Set tree formula
+data = total_data, # Set data
+control = rpart.control(cp = 0.11)) # Set parameters
+fancyRpartPlot(tree_2) # Plot fancy tree
+```
+
+We can also set some other parameters inside \`rpart.control()\`:
+
+
+\* minsplit -	the minimum number of observations that must exist in a node in order for a split to be attempted.
+
+\* minbucket	- the minimum number of observations in any terminal node.
+
+\* xval - number of cross-validations.
+
+\* maxdepth -	Set the maximum depth of any node of the final tree, with the root node counted as depth 0. Values greater than 30 rpart will give nonsense results on 32-bit machines.
+
+
+
+## Imbalanced Data
+
+
+```{r}
+summary(as.factor(total_data$loan_status))
+```
+
+
+\* Bootstrap re-sampling - Sample with replacement from the minority class to re-balance the data
+
+\* SMOTE - Synthetic minority over-sampling technique, this creates new synthetic samples for the minority class.
+
+### Bootstrap resampling
+
+To carry out bootstrap re-sampling we simply generate a random selection of indices from the minority class to use in the model, in effect this randomly duplicates some of the minority class samples:
+
+```{r bootstrap resample}
+set.seed(123456) # Set seed for sampling
+# Split data into approved and rejected classes
+total_data$loan_status2 <- factor(total_data$loan_status)
+#summary(total_data$loan_status2)
+total_data$loan_status2 <- as.numeric(total_data$loan_status2)
+
+
+Rejected <- total_data[total_data$loan_status2==2,] # Select minority samples
+Approved <- total_data[total_data$loan_status2 ==1,] # Select majority samples
+nrow(Rejected) # Rows in Rejected
+nrow(Approved) # Rows in Approved
+Rejected_boot <- Rejected[sample(1:nrow(Rejected), size = nrow(Approved), replace =TRUE),] # Create bootstrap sample
+nrow(Rejected_boot) # Check rows of bootstrap sample
+use_dat <- rbind.data.frame(Rejected_boot, Approved) # Join data together
+```
+
+We can now fit a tree on the bootstrapped data:
+
+```{r tree boot}
+total_data = subset(total_data,select = -loan_status2)
+use_dat= subset(use_dat,select = -loan_status2)
+
+tree_3 <- rpart(loan_status ~., # Set tree formula
+data = use_dat) # Set data
+fancyRpartPlot(tree_3) # Plot fancy tree
+```
+
+### Prediction prelim
+
+To test how our model will perform on new data we can split the data into training and test sets. We will use the data which is already split into help and no help to ensure we have an equal proportion of samples in each class for both our training and test sets. We will use 20% of the data for testing. To do this we can use the stratified function which will create a stratified sample for our dataset.
+
+
+```{r train test}
+ set.seed(123456) # Set seed
+
+total_data$loan_status <- as.factor(total_data$loan_status)
+total_data$education <- as.factor(total_data$education)
+total_data$self_employed <- as.factor(total_data$self_employed)
+
+# Perform stratified sampling
+ split_dat <- stratified(total_data, # Set dataset
+                         group = "loan_status", # Set variables to use for stratification
+                         size = 0.2,  # Set size of test set
+                         bothSets = TRUE ) # Return both training and test sets
+ # Extract train data
+ train_dat <- split_dat[[2]]
+ # Extract test data
+ test_dat <- split_dat[[1]]
+
+# Check size
+nrow(train_dat)
+nrow(test_dat)
+```
+
+So we have 3415 training samples and 854 test samples. We can now build a tree on the training data:
+
+```{r build train tree}
+tree_5 <- rpart(loan_status ~., # Set tree formula
+data = train_dat) # Set data
+fancyRpartPlot(tree_5) # Plot fancy tree
+```
+
+We can then predict the class of the test samples:
+
+```{r Predict new}
+preds <- predict(tree_5, test_dat) # Predict test samples
+```
+
+We can the visualize the results of our prediction by class:
+
+
+
+```{r plot predictions}
+# Join predictions (second column is prob of sought help) and test response
+plot_dat <- cbind.data.frame(preds[,2], test_dat$loan_status)
+names(plot_dat) <- c("probability", "response")
+g_3 <- ggplot(plot_dat, aes(y = probability, x = response, fill = response)) +
+geom_boxplot() +
+theme_bw() +
+theme(panel.grid.major = element_blank(), # Turn of the background grid
+panel.grid.minor = element_blank(),
+panel.border = element_blank(),
+panel.background = element_blank()) +
+labs(y = "Probability",  # Set plot labels
+fill = "Approved",
+title = "Predicted Probabilities v Approved") +
+scale_fill_manual(values = c("Rejected" = "red", "Approved" = "blue"),) # Manually set fill values
+g_3
+
+
+g_4 <- ggplot(plot_dat, aes(x = probability, fill = response)) +
+geom_density(alpha = 0.3) +
+theme_bw() +
+theme(panel.grid.major = element_blank(), # Turn of the background grid
+panel.grid.minor = element_blank(),
+panel.border = element_blank(),
+panel.background = element_blank()) +
+labs(x = "Probability",  # Set plot labels
+fill = "Approved",
+title = "Predicted Probabilities v Approved") +
+scale_fill_manual(values = c("Rejected" = "red", "Approved" = "blue"),) # Manually set fill values
+g_4
+
+```
+
+Lets use a cut-off of 0.6 and see what the results would look like in a confusion matrix:
+
+
+```{r confusion matrix}
+preds_char <- rep("Rejected", nrow(plot_dat)) # Create vector for predictions with deafult value
+preds_char[which(plot_dat$probability >= 0.6)] <- "Approved" # Select sought help predictions
+# confusionMatrix(table(preds_char, as.factor(plot_dat$response))) # Create confusion matrix
+```
+
+Lets see if using smote on the training data can help improve our accuracy;
+
+
+```{r smote preds}
+# Run smote
+smote_dat_2 <- SMOTE(loan_status ~ ., # Set prediction formula
+train_dat, # Set dataset
+perc.over = 100) # Select oversampling for minority class
+# Build tree
+tree_6 <- rpart(loan_status ~., # Set tree formula
+data = smote_dat_2) # Set data
+# Predict test data
+preds <- predict(tree_6, test_dat)
+# Extract probabilities and produce table
+plot_dat <- cbind.data.frame(preds[,2], test_dat$loan_status)
+names(plot_dat) <- c("probability", "response")
+preds_char <- rep("Rejected", nrow(plot_dat)) # Create vector for predictions with deafult value
+preds_char[which(plot_dat$probability >= 0.6)] <- "Approved" # Select sought help predictions
+# confusionMatrix(table(preds_char, as.factor(plot_dat$response))) # Create confusion matrix}
+```
+
+Not much of an increase, lets try combining smote and modifying the parameter values. First we can build a maximal tree and look at the cp:
+
+
+```{r smote cp}
+# Set seed
+set.seed(999999)
+# Build tree
+tree_7 <- rpart(loan_status ~., # Set tree formula
+data = smote_dat_2, # Set data
+control = rpart.control(cp = 0)) # Select cp 
+# Plot CP
+plotcp(tree_7)
+# Print CP
+printcp(tree_7)
+```
+
+The cp appears to be minimized about 0.11. Instead of returning probabilities from the prediction we can set \`type="class"\` in the predict function to get the function to return a class prediction.
+
+
+```{r tune smote}
+
+# Build tree
+tree_8 <- rpart(loan_status ~., # Set tree formula
+data = smote_dat_2, # Set data
+control = rpart.control(cp = 0.11)) # Select cp
+
+# Predict test data
+preds <- predict(tree_8, test_dat, type = "class")
+
+confusionMatrix(table(preds,  test_dat$loan_status)) # Create confusion matrix
+```
+
+### Comparing Data
