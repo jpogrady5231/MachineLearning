@@ -409,3 +409,80 @@ confusionMatrix(table(preds,  test_dat$loan_status)) # Create confusion matrix
 ```
 
 ### Comparing Data
+
+
+##### JACK'S PART #####
+
+```{r}
+# Importing the glmnet package for logistic regression
+
+library(glmnet)
+```
+
+
+```{r}
+# Reading the data file and converting the response variable from categorical to numeric
+
+total_data <- read.csv("Downloads/loan_approval_dataset 2.csv")
+
+total_data$loan_status <- abs(as.numeric(as.factor(total_data$loan_status)) - 2)
+```
+
+```{r}
+# Building a logistic regression model to predict loan status with all of the other variables as predictors
+
+fit_1 <- glm(loan_status ~ .,
+             family=binomial(link='logit'), 
+             data= total_data)
+summary(fit_1)
+```
+
+```{r}
+# Converting the remaining categorical variables to numeric and scaling the variables 
+
+total_data$education <- abs(as.numeric(as.factor(total_data$education)) - 2)
+total_data$self_employed <- as.numeric(as.factor(total_data$self_employed)) - 1
+
+x_data <- as.data.frame(scale(total_data[,-13])) 
+x_data$loan_status <- total_data$loan_status 
+x_vars <- model.matrix(loan_status ~., 
+                       x_data)[,-1]
+```
+
+```{r}
+# Determining the best lambda for a logistic lasso model
+
+set.seed(123)
+
+lambda_seq <- 10^seq(4, -4, by = -.1)
+
+cv.lasso <- cv.glmnet(x = x_vars, 
+                 y = total_data$loan_status, 
+                 alpha = 1, 
+                 family = "binomial", 
+                 lambda = lambda_seq,
+                 nfolds = 10)
+best_lam <- cv.lasso$lambda.1se 
+best_lam
+```
+
+```{r}
+# Building the logistic lasso model with the best lambda
+
+lasso_fit <- glmnet(x = x_vars,
+                    y = total_data$loan_status, 
+                    alpha = 1,
+                    family = "binomial",
+                    lambda = best_lam)
+
+coef(lasso_fit)
+```
+
+```{r}
+# Comparing the logistic model to the logistic lasso model
+
+comparison <- cbind.data.frame(coef(fit_1), as.vector(coef(lasso_fit)))
+names(comparison) <- c("Logistic Regression", "Logistic Lasso") 
+rownames(comparison) <- names(coef(fit_1))
+comparison
+```
