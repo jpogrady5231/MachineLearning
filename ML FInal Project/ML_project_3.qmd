@@ -80,6 +80,80 @@ summary(total_data)
 summary(as.factor(train_data$loan_status))
 ```
 
+### Data Visualizations
+```{r}
+plot_dat <- total_data 
+plot_dat$loan_status <-  as.factor(total_data$loan_status)
+head(plot_dat)
+
+g_1 <- ggplot(plot_dat, aes(x = income_annum, fill = loan_status)) + 
+  geom_density(alpha = 0.55) + 
+    theme_set(theme_bw(base_size = 10) ) + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), 
+        panel.background = element_blank()) + 
+  labs(x = "Annual_Income", title = "Annual_Income - LoanApproval",
+       fill = "Loan Status")+ 
+    scale_fill_manual(values = c(" Rejected" = "red", " Approved" = "blue"),
+                    labels = c(" Rejected" = "Rejected", " Approved" = "Approved")) 
+
+g_1 
+```
+
+```{r}
+g2 <- ggplot(plot_dat, aes(x = cibil_score, fill = loan_status)) + 
+ geom_density(alpha = 0.55) + 
+    theme_set(theme_bw(base_size = 10) ) + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), 
+        panel.background = element_blank()) + 
+  labs(x = "CreditScore", title = "CreditScore - LoanApproval",
+       fill = "Loan Status")+ 
+  scale_fill_manual(values = c(" Rejected" = "red", " Approved" = "green"),
+                    labels = c(" Rejected" = "Rejected", " Approved" = "Approved")) 
+
+g2 
+```
+```{r}
+g3 <- ggplot(plot_dat, aes(x = education, fill = loan_status)) + 
+  geom_bar(alpha = 0.5, position = "dodge") + 
+  theme_set(theme_bw(base_size = 22) ) + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), 
+        panel.background = element_blank()) + labs(x = "Graduate Status", title = "Education Level?",
+       fill = "Loan Status") +   scale_fill_manual(values = c(" Rejected" = "red", " Approved" = "green"),
+                    labels = c(" Rejected" = "Rejected", " Approved" = "Approved")) 
+
+
+
+g3
+```
+
+```{r}
+#plot_dat$no_of_dependents <-  as.factor(plot_dat$no_of_dependents)
+g4 <- ggplot(plot_dat, aes(x = no_of_dependents, y = loan_status, fill = loan_status)) +
+    geom_boxplot(alpha = 0.5, position = "dodge") + 
+  theme_set(theme_bw(base_size = 22) ) + 
+  theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank(), 
+        panel.background = element_blank()) + labs(x = "Number of Dependents", title = "Number of Dependents?",
+       fill = "Loan Status") +   scale_fill_manual(values = c(" Rejected" = "red", " Approved" = "green"),
+                    labels = c(" Rejected" = "Rejected", " Approved" = "Approved")) 
+
+
+g4
+       
+
+```
+
+
+
+
+
 ### Decision Tree:
 
 We are now ready to fit a classification tree in order to predict if an individual will seek or not seek help for a mental health issue. To build a decision tree, we will use the \`rpart()\` function. We will build our first tree using all the variables, using \`\~.\` as we did for logistic and linear regression.
